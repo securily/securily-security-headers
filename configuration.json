@@ -1,0 +1,210 @@
+[
+  {
+    "name": "Strict-Transport-Security",
+    "severity": "High",
+    "reason": "This header helps protect users from man-in-the-middle attacks and cookie hijacking by telling the browser to only communicate with the server over a secure HTTPS connection.",
+    "remediation": "To enable this header, add the following to your HTTP response headers: Strict-Transport-Security: max-age=<expire-time>; includeSubDomains; preload. Replace <expire-time> with the number of seconds you wish the browser to remember that a site is only to be accessed using HTTPS.",
+    "values": "max-age, includeSubDomains, preload",
+    "directives": "Strict-Transport-Security: max-age=31536000; includeSubDomains; preload"
+  },
+  {
+    "name": "Content-Security-Policy",
+    "severity": "High",
+    "reason": "Content Security Policies are used to restrict the resources a browser can load. This helps to prevent cross-site scripting (XSS) attacks, by allowing web developers to specify which domains are trusted and which are not. When these policies are not configured correctly, attackers can inject malicious code into a website and compromise user data.",
+    "remediation": "1. Identify the resources that your application requires. 2. Configure the Content-Security-Policy header to specify which domains are allowed to host the necessary resources. 3. Test the header to verify that it works as expected.",
+    "values": "none, self, unsafe-inline, unsafe-eval, strict-dynamic, report-sample, upgrade-insecure-requests, report-uri, and/or a list of domains",
+    "directives": "default-src, script-src, style-src, img-src, font-src, media-src, connect-src, frame-src, manifest-src, plugin-types, base-uri, form-action, frame-ancestors"
+  },
+  {
+    "name": "X-Content-Type-Options",
+    "severity": "Medium",
+    "reason": "The X-Content-Type-Options header is used to prevent browsers from interpreting files as something other than declared by the content type. This helps to protect against certain types of attacks such as Cross Site Scripting (XSS) and other malicious content injection attacks.",
+    "remediation": "To enable the X-Content-Type-Options header, add the following code to the web server configuration file: Header set X-Content-Type-Options: nosniff",
+    "values": "nosniff",
+    "directives": "X-Content-Type-Options: nosniff"
+  },
+  {
+    "name": "X-Frame-Options",
+    "severity": "High",
+    "reason": "X-Frame-Options is a security header that can be used to prevent clickjacking attacks by preventing a page from being framed in another page. Without this header, attackers can frame a vulnerable page and hijack user interactions by displaying malicious content over the top of the vulnerable page.",
+    "remediation": "Add the X-Frame-Options header to the response header of your website with the value of DENY or SAMEORIGIN. This will prevent the page from being framed in other pages. Ensure that the header is configured correctly and that it is not being overridden by other headers.",
+    "values": "DENY, SAMEORIGIN, ALLOW-FROM",
+    "directives": "X-Frame-Options: DENY, X-Frame-Options: SAMEORIGIN, X-Frame-Options: ALLOW-FROM http://example.com/"
+  },
+  {
+    "name": "X-XSS-Protection",
+    "severity": "Medium",
+    "reason": "X-XSS-Protection is a header that can help protect against cross-site scripting (XSS) attacks by setting certain parameters for the browser to follow. XSS attacks are a common type of attack used to inject malicious scripts into web pages and applications, which can be used to steal sensitive information or disrupt website functionality. Without this header, an attacker could potentially inject malicious scripts into a website, which would then be executed in visitors' browsers.",
+    "remediation": "To ensure X-XSS-Protection is set properly, add the following line to the HTTP response header of the web application: X-XSS-Protection: 1; mode=block. This will enable the browser's XSS filter and block any malicious scripts from being executed.",
+    "values": "0, 1, mode=block, report=",
+    "directives": "X-XSS-Protection: 1; mode=block"
+  },
+  {
+    "name": "Referrer-Policy",
+    "severity": "High",
+    "reason": "The Referrer-Policy header allows websites to control the behavior of the Referer header. If set incorrectly, the website can be vulnerable to certain types of data leakage, cross-site request forgery (CSRF) attacks, and other security issues.",
+    "remediation": "Set the Referrer-Policy header to 'no-referrer' or 'same-origin'. This will ensure that the Referer header is only sent to the same origin and is not sent externally. Ensure that all subdomains are configured to use the same policy.",
+    "values": "no-referrer, no-referrer-when-downgrade, same-origin, origin, strict-origin, origin-when-cross-origin, strict-origin-when-cross-origin, unsafe-url",
+    "directives": "Referrer-Policy: no-referrer; Referrer-Policy: same-origin;"
+  },
+  {
+    "name": "Access-Control-Allow-Origin",
+    "severity": "High",
+    "reason": "Access-Control-Allow-Origin is an important header that is used to protect against Cross-Origin Resource Sharing (CORS) attacks. It defines which origins are allowed to make requests to the server. If this header is not set, attackers can potentially make requests from any origin and gain access to confidential data.",
+    "remediation": "To mitigate CORS vulnerabilities, the Access-Control-Allow-Origin header should be set to the exact origin of the request. If the request origin is not known, the header should be set to '*'. For example, Access-Control-Allow-Origin: http://www.example.com.",
+    "values": "* or valid domain and port",
+    "directives": "Access-Control-Allow-Origin: http://www.example.com"
+  },
+  {
+    "name": "Access-Control-Allow-Methods",
+    "severity": "High",
+    "reason": "This header is used to specify the methods that are allowed when accessing the resource. If this header is not present, the browser may only allow GET and POST requests.",
+    "remediation": "To remedy this, add the Access-Control-Allow-Methods header to the response, specifying the allowed methods. For example: Access-Control-Allow-Methods: GET, POST, PUT, DELETE.",
+    "values": "GET, POST, OPTIONS, HEAD, PUT, DELETE",
+    "directives": "Access-Control-Allow-Methods: GET, POST, PUT, DELETE"
+  },
+  {
+    "name": "Access-Control-Allow-Headers",
+    "severity": "Low",
+    "reason": "The Access-Control-Allow-Headers response header is used in response to a preflight request which includes the Access-Control-Request-Headers to indicate which HTTP headers can be used during the actual request.",
+    "remediation": "Set the Access-Control-Allow-Headers response header to include the list of headers specified in the Access-Control-Request-Headers request header.",
+    "values": "* (all headers), Content-Type, X-Requested-With, Authorization, etc.",
+    "directives": "Access-Control-Allow-Headers: Content-Type, Authorization"
+  },
+  {
+    "name": "Access-Control-Allow-Credentials",
+    "severity": "High",
+    "reason": "This header allows a server to indicate that it will accept cross-origin requests with credentials (cookies, HTTP authentication, client-side SSL certificates, etc.) included. By allowing credentials, the server is indicating that it trusts the origin, and is allowing the origin to access any resources that are protected by authentication.",
+    "remediation": "This header should only be used if the server is sure that it trusts the origin of the request. If the origin is not trusted, then this header should be set to 'false'. This can be done by setting the Access-Control-Allow-Credentials header to 'false' in the response.",
+    "values": "true, false",
+    "directives": "Access-Control-Allow-Credentials: true"
+  },
+  {
+    "name": "Access-Control-Expose-Headers",
+    "severity": "Medium",
+    "reason": "This header allows the server to specify which headers are safe to expose to the client. It is recommended to include this header to prevent exposing sensitive information to the client.",
+    "remediation": "Add the Access-Control-Expose-Headers header to your server configuration, specifying which headers should be exposed to the client. If you do not want to expose any headers, you can specify '*' as the value.",
+    "values": "* or a comma-separated list of headers",
+    "directives": "Access-Control-Expose-Headers: Content-Length, Content-Type"
+  },
+  {
+    "name": "Access-Control-Max-Age",
+    "severity": "Low",
+    "reason": "The Access-Control-Max-Age header enables the browser to cache the CORS preflight request for the specified number of seconds. This can help reduce the number of requests sent to the server, which can improve performance. It is not a security concern, but may be useful for performance optimization.",
+    "remediation": "Specifying the Access-Control-Max-Age header can help optimize performance of requests to the server. The header should be set to the desired number of seconds that the browser should cache the preflight request.",
+    "values": "Any integer from 0 to 86400 (1 day)",
+    "directives": "Access-Control-Max-Age: 86400"
+  },
+  {
+    "name": "Content-Encoding",
+    "severity": "Medium",
+    "reason": "Content-Encoding is used to compress content before sending it over the network. Not using this header can cause large files to be sent over the network, which can significantly increase page load times and consume more bandwidth.",
+    "remediation": "Ensure that Content-Encoding is enabled on all content that is sent over the network. This will help reduce page load times and save bandwidth.",
+    "values": "gzip, deflate, br, compress, identity",
+    "directives": "Content-Encoding: gzip"
+  },
+  {
+    "name": "Content-Length",
+    "severity": "Medium",
+    "reason": "Content-Length headers can be used to allow attackers to determine the size of the response, which can be used to identify the type of server or application in use.",
+    "remediation": "To remediate Content-Length headers, either remove the header or set it to '0' to indicate that the content length is not known.",
+    "values": "Any positive number or 0",
+    "directives": "Content-Length: 0"
+  },
+  {
+    "name": "Content-Type",
+    "severity": "High",
+    "reason": "Content-Type is a header that can be used to specify the type of data that the server should expect. If the header is not set correctly, attackers can use this to perform malicious file uploads and execute arbitrary code on the server.",
+    "remediation": "Ensure that Content-Type is set to the appropriate value for the type of data being sent. For example, if sending a text file, Content-Type should be set to 'text/plain'.",
+    "values": "text/plain, text/html, application/x-www-form-urlencoded, multipart/form-data, application/json, image/gif, image/jpeg, image/png",
+    "directives": "Content-Type: text/html; charset=utf-8"
+  },
+  {
+    "name": "ETag",
+    "severity": "Low",
+    "reason": "ETags provide a way for browsers to cache web assets, as well as a way for websites to validate their ETags to ensure integrity. However, they can be used to track users across different websites, and should be used with caution.",
+    "remediation": "Ensure that ETags are only enabled on specific websites that require them, and disable them on all other websites. Additionally, ensure that users are informed of any tracking that is taking place.",
+    "values": "Weak, Strong, None",
+    "directives": "ETag: Weak/Strong/None"
+  },
+  {
+    "name": "Last-Modified",
+    "severity": "Low",
+    "reason": "The Last-Modified header is used to provide the date and time of when the page was last modified. It is used to help with caching of the page and can help reduce latency. It is also used to help with versioning of the page.",
+    "remediation": "Ensure that the Last-Modified header is set properly on all pages. This header should be set to the most accurate time possible to reflect the last time the page was modified.",
+    "values": "Valid date and time values in RFC 1123 format",
+    "directives": "Last-Modified: Mon, 15 Jul 2019 12:45:26 GMT"
+  },
+  {
+    "name": "Server",
+    "severity": "Low",
+    "reason": "The presence of the Server header indicates the web server software and version being used. This can be used to target vulnerabilities on the web server.",
+    "remediation": "Remove the Server header from the response. This can be done by configuring the web server, or using a web application firewall to remove the header.",
+    "values": "Apache, nginx, Microsoft-IIS/7.5, etc.",
+    "directives": "Server: Apache/2.4.18 (Unix)"
+  },
+  {
+    "name": "Vary",
+    "severity": "Low",
+    "reason": "The Vary header is used in response to requests made with an HTTP method other than GET or HEAD, such as POST, PUT, or DELETE. This header instructs the cache to store different versions of a resource based on the value of the header. For example, if Vary: User-Agent is included in the response, the cache will store different versions of the resource based on the user-agent used for the request.",
+    "remediation": "The value of the header should be set to the appropriate value for the type of request being made. For example, the header should be set to Vary: User-Agent for requests made with a different user-agent.",
+    "values": "User-Agent, Accept-Encoding, Accept-Language, Accept",
+    "directives": "Vary: User-Agent; Vary: Accept-Encoding; Vary: Accept-Language; Vary: Accept"
+  },
+  {
+    "name": "WWW-Authenticate",
+    "severity": "High",
+    "reason": "The WWW-Authenticate header is used for authenticating a user to a web server. Not having this header configured correctly can lead to unauthorized access to the server.",
+    "remediation": "Configure the WWW-Authenticate header to require basic authentication. Check the server settings to make sure that the authentication type is set to basic and that the username and password are secure.",
+    "values": "Basic, Digest, NTLM, Negotiate",
+    "directives": "WWW-Authenticate: Basic realm=\u201dYour Realm\u201d"
+  },
+  {
+    "name": "Public-Key-Pins",
+    "severity": "High",
+    "reason": "Public-Key-Pins (HPKP) is an HTTP response header used to specify to a user agent the hashes of public keys associated with the domain of the website. This header is used to detect if a man-in-the-middle attack is taking place, as the attacker would not have the correct public key to the website. Without this header, an attacker could redirect requests to a malicious website, or inject malicious content into the website.",
+    "remediation": "1. Generate a public/private key pair. 2. Generate a sha-256 hash of the public key and store in the Public-Key-Pins header.3. Include a max-age to set an expiry date for the Pin.4. Add a backup Pin to the header in case the primary Pin is compromised.5. Include the includeSubDomains directive to enforce the HPKP policy on all subdomains.6. Monitor the HPKP logs for any issues.",
+    "values": "pin-sha256, max-age, includeSubDomains",
+    "directives": "pin-sha256=\"d6qzRu9zOECb90Uez27xWltNsj0e1Md7GkYYkVoZWmM=\"; max-age=2592000; includeSubDomains"
+  },
+  {
+    "name": "Expect-CT",
+    "severity": "High",
+    "reason": "Expect-CT is an HTTP header that allows sites to opt in to reporting and/or enforcement of Certified Transparency, a mechanism for monitoring certificate transparency compliance of Certificate Authorities (CAs). It also allows sites to specify whether they want the browser to enforce Certificate Transparency policy for connections to the site. If this header is not present, the browser will not enforce any Certificate Transparency policy.",
+    "remediation": "Set the Expect-CT header to 'enforce', and specify a 'max-age' directive to set the caching duration of the header. For example: Expect-CT: max-age=86400, enforce",
+    "values": "max-age, enforce",
+    "directives": "max-age: Specifies the maximum amount of time, in seconds, that the header should be cached. enforce: Specifies that the browser should enforce Certificate Transparency policy for connections to the site."
+  },
+  {
+    "name": "Feature-Policy",
+    "severity": "High",
+    "reason": "Feature-Policy is a powerful security header that allows you to control which features and APIs are available to the browser. If misconfigured, it can open your website to vulnerabilities.",
+    "remediation": "1. Identify which features need to be enabled or disabled for the website.2. Use the Feature-Policy header to limit access to the required features.3. Test the Feature-Policy header to ensure that it is correctly configured.",
+    "values": "none, self, *, <origin>, <domain>, <scheme>",
+    "directives": "geolocation 'none', camera 'self', microphone '*', payment 'https://example.com', midi 'self' https://example.com"
+  },
+  {
+    "name": "Cross-Origin-Resource-Policy",
+    "severity": "High",
+    "reason": "The Cross-Origin-Resource-Policy header allows for the restriction of resources from other origins, which can help mitigate cross-origin attacks, such as Cross-Site Request Forgery (CSRF) and Cross-Site Scripting (XSS). If this header is not properly configured, it can lead to security vulnerabilities and data leakage.",
+    "remediation": "The Cross-Origin-Resource-Policy header can be set to allow, deny, or restrict resources from specific origins. For example, the header can be set to 'Cross-Origin-Resource-Policy: allow https://example.com; deny https://example2.com'. It should be noted that the header should never be set to '*' as this allows all origins access to the resource.",
+    "values": "allow, deny, restrict",
+    "directives": "Cross-Origin-Resource-Policy: allow https://example.com; deny https://example2.com"
+  },
+  {
+    "name": "Cross-Origin-Embedder-Policy",
+    "severity": "Medium",
+    "reason": "This header is used to protect against cross-origin embedding of malicious content, such as malicious scripts or other resources that could lead to XSS vulnerabilities. It is important to have this header set appropriately to ensure that only trusted content is embedded in the page.",
+    "remediation": "To ensure that only trusted content is embedded in the page, set the header to the appropriate value depending on the type of content being embedded. Possible values include: 'require-corp', 'require-same-origin', 'require-src', 'none'. It is also important to ensure that the header is not set to 'unsafe-allow-all' which would allow all types of content to be embedded in the page.",
+    "values": "require-corp, require-same-origin, require-src, none, unsafe-allow-all",
+    "directives": "Cross-Origin-Embedder-Policy: require-corp; Cross-Origin-Embedder-Policy: require-same-origin; Cross-Origin-Embedder-Policy: require-src; Cross-Origin-Embedder-Policy: none; Cross-Origin-Embedder-Policy: unsafe-allow-all"
+  },
+  {
+    "name": "Cross-Origin-Opener-Policy",
+    "severity": "High",
+    "reason": "Cross-Origin-Opener-Policy (COOP) is a security header that is designed to prevent an attack known as a reverse tabnabbing attack. This attack involves a malicious website replacing the content of a legitimate website, in a new browser tab, with something malicious. COOP can help prevent this attack by ensuring that a website can only be opened in a browser tab from its own origin. This helps ensure that attackers cannot replace the content of a legitimate website with something malicious.",
+    "remediation": "To enable Cross-Origin-Opener-Policy, specify the header in the response header with the value of 'same-origin'. This will ensure that any cross-origin requests will be blocked, and the website will only be opened in a browser tab from its own origin.",
+    "values": "same-origin",
+    "directives": "Cross-Origin-Opener-Policy: same-origin"
+  }
+]
