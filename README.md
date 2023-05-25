@@ -1,4 +1,4 @@
-# Security Headers Scanner by Securily
+# OpenAI Security Headers Scanner by Securily
 ![Security Headers Scanner by Securily](securily-security-headers.png)
 
 This tool has been developed by Securily to help developers troubleshoot and analyze the security headers in their web applications. By checking the presence and configuration of security headers, this scanner aims to prevent potential security vulnerabilities and protect web applications from being compromised.
