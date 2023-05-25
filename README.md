@@ -15,7 +15,6 @@ This tool has been developed by Securily to help developers troubleshoot and ana
 ## Quickstart
 ```shell
    git clone https://github.com/securily/security-headers-scanner.git
-   pip install -r requirements.txt
    ./securily-headers.sh -o <OPENAI_API_KEY> -u https://securily.com
 ```
 
