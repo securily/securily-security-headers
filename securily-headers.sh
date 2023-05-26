@@ -23,7 +23,43 @@ OPENAI_API_KEY = args.openai_api_key
 # The URL to Scan
 URL = args.url_to_scan
 # List of HTTP headers
-headers_to_read = ["Strict-Transport-Security", "Content-Security-Policy", "X-Content-Type-Options", "X-Frame-Options", "X-XSS-Protection", "Referrer-Policy", "Access-Control-Allow-Origin", "Access-Control-Allow-Methods", "Access-Control-Allow-Headers", "Access-Control-Allow-Credentials", "Access-Control-Expose-Headers", "Access-Control-Max-Age", "Content-Encoding", "Content-Length", "Content-Type", "ETag", "Last-Modified", "Server", "Vary", "WWW-Authenticate", "Public-Key-Pins", "Expect-CT", "Feature-Policy", "Cross-Origin-Resource-Policy", "Cross-Origin-Embedder-Policy", "Cross-Origin-Opener-Policy"]
+headers_to_read = []
+
+website_security_headers = [
+    "Strict-Transport-Security",
+    "Content-Security-Policy",
+    "X-Content-Type-Options",
+    "X-Frame-Options",
+    "X-XSS-Protection",
+    "Referrer-Policy"
+]
+
+web_application_security_headers = [
+    "Access-Control-Allow-Origin",
+    "Access-Control-Allow-Methods",
+    "Access-Control-Allow-Headers",
+    "Access-Control-Allow-Credentials",
+    "Access-Control-Expose-Headers",
+    "Access-Control-Max-Age"
+]
+
+api_security_headers = [
+    "Content-Encoding",
+    "Content-Length",
+    "Content-Type",
+    "ETag",
+    "Last-Modified",
+    "Server",
+    "Vary",
+    "WWW-Authenticate",
+    "Public-Key-Pins",
+    "Expect-CT",
+    "Feature-Policy",
+    "Cross-Origin-Resource-Policy",
+    "Cross-Origin-Embedder-Policy",
+    "Cross-Origin-Opener-Policy"
+]
+
 
 # Array to store configuration
 configuration = []
@@ -100,7 +136,7 @@ def compare_headers_configuration(headers, configuration):
                 header_value = "Failed to download content: {}".format(str(e))
 
         if header_config:
-            if header == header_config.get('name') and (header_config.get('values') and any(keyword in header_value for keyword in header_config['values'].split(', '))):
+            if header.lower() == header_config.get('name').lower() and (header_config.get('values') and any(keyword.lower() in header_value.lower() for keyword in header_config['values'].split(', '))):
                 results.append({"name": header_config.get('name'), "value": (header_value or "n/a"), "severity": header_config.get('severity'), "reason": header_config.get('reason'), "remediation": header_config.get('remediation'), "values": header_config.get('values'), "status": "PASS"})
             else:
                 results.append({"name": header_config.get('name'), "value": (header_value or "n/a"), "severity": header_config.get('severity'), "reason": header_config.get('reason'), "remediation": header_config.get('remediation'), "values": header_config.get('values'), "directives": header_config.get('directives'), "status": "FAIL"})
@@ -203,6 +239,14 @@ def configure_headers():
     with open(config_file_path, "w") as file:
         json.dump(configuration, file)
 
+# Determine the type of headers based on the URL
+URL=normalizeUrl(URL)
+if "www" in URL or not re.match('^https?://', URL):
+    headers_to_read = website_security_headers
+elif "api" in URL:
+    headers_to_read = api_security_headers
+else:
+    headers_to_read = website_security_headers + web_application_security_headers
 
 # Example usage of read_headers_from_url()
 headers = read_headers_from_url(URL)
