@@ -8,7 +8,9 @@ import os
 import argparse
 
 # Path to the configuration file
-config_file_path = "configuration.json"
+website_config_file_path = "website_configuration.json"
+webapp_config_file_path = "webapp_configuration.json"
+api_config_file_path = "api_configuration.json"
 
 # Configure argparse for command-line arguments
 parser = argparse.ArgumentParser(description="Security Security Headers Open Source Scanner powered by OpenAI")
@@ -24,6 +26,8 @@ OPENAI_API_KEY = args.openai_api_key
 URL = args.url_to_scan
 # List of HTTP headers
 headers_to_read = []
+# Array to store configuration
+configuration = []
 
 website_security_headers = [
     "Strict-Transport-Security",
@@ -31,7 +35,8 @@ website_security_headers = [
     "X-Content-Type-Options",
     "X-Frame-Options",
     "X-XSS-Protection",
-    "Referrer-Policy"
+    "Referrer-Policy",
+    "Permissions-Policy"
 ]
 
 web_application_security_headers = [
@@ -59,10 +64,6 @@ api_security_headers = [
     "Cross-Origin-Embedder-Policy",
     "Cross-Origin-Opener-Policy"
 ]
-
-
-# Array to store configuration
-configuration = []
 
 def normalizeUrl(url):
     if not re.match('^https?://', url):
@@ -104,6 +105,17 @@ def read_headers_from_url(url):
 
         for header in headers_to_read:
             header_value = response_headers.get(header)
+            if header_value and (header_value.startswith("http://") or header_value.startswith("https://")):
+                try:
+                    response = requests.get(header_value, verify=False)
+                    if response.status_code == 200:
+                        header_value = response.text
+                        headers[header] = header_value
+                    else:
+                        header_value = "Failed to download content"
+                except requests.exceptions.RequestException as e:
+                    header_value = "Failed to download content: {}".format(str(e))
+
             if header_value:
                 headers[header] = header_value
             else:
@@ -117,23 +129,13 @@ def read_headers_from_url(url):
         return None
 
 
-def compare_headers_configuration(headers, configuration):
+def compare_headers_configuration(headers_found, source_configuration):
     results = []
 
     for header in headers_to_read:
-        header_config = next((config for config in configuration if config['name'] == header), None)
+        header_config = next((config for config in source_configuration if config['name'] == header), None)
 
-        header_value = headers.get(header)
-        if header_value and (header_value.startswith("http://") or header_value.startswith("https://")):
-            try:
-                response = requests.get(header_value, verify=False)
-                if response.status_code == 200:
-                    header_value = response.text
-                    headers[header] = header_value
-                else:
-                    header_value = "Failed to download content"
-            except requests.exceptions.RequestException as e:
-                header_value = "Failed to download content: {}".format(str(e))
+        header_value = headers_found.get(header)
 
         if header_config:
             if header.lower() == header_config.get('name').lower() and (header_config.get('values') and any(keyword.lower() in header_value.lower() for keyword in header_config['values'].split(', '))):
@@ -146,17 +148,17 @@ def compare_headers_configuration(headers, configuration):
     return results
 
 
-def configure_headers():
+def configure_headers(headers_to_configure, path_to_configure):
     # Define the array to store configurations
     configuration = []
 
     # Iterate over each header
-    for header in headers_to_read:
-        retries = 3  # Number of retries
+    for header in headers_to_configure:
+        retries = 5  # Number of retries
         while retries > 0:
             # Define the prompt
             prompt = 'For the following security header: {}, return a JSON object in the following format: {{"name": "Header Name", "severity": "Severity Rating", ' \
-                     '"reason": "Detailed explanation justifying the severity classification of the finding", "remediation": "Step-by-step instructions for remediation.", ' \
+                     '"reason": "Explain for a non technical person justifying the severity classification of the finding", "remediation": "Step-by-step instructions for remediation.", ' \
                      '"values": "possible values for the content security policy header comma separated", "directives": "header directives with examples"}}'.format(header)
 
             # Create the JSON data for the request
@@ -236,17 +238,20 @@ def configure_headers():
             time.sleep(1)
 
     # Save the configuration to a file
-    with open(config_file_path, "w") as file:
+    with open(path_to_configure, "w") as file:
         json.dump(configuration, file)
 
 # Determine the type of headers based on the URL
 URL=normalizeUrl(URL)
-if "www" in URL or not re.match('^https?://', URL):
-    headers_to_read = website_security_headers
+if "app" in URL:
+    headers_to_read = website_security_headers + web_application_security_headers
+    config_file_path = webapp_config_file_path
 elif "api" in URL:
     headers_to_read = api_security_headers
+    config_file_path = api_config_file_path
 else:
-    headers_to_read = website_security_headers + web_application_security_headers
+    headers_to_read = website_security_headers
+    config_file_path = website_config_file_path
 
 # Example usage of read_headers_from_url()
 headers = read_headers_from_url(URL)
@@ -261,8 +266,10 @@ if headers:
 if args.force_reload or not os.path.exists(config_file_path):
     # Call the configure_headers() function to create or reload the configuration file
     print("Loading headers from OpenAI, this will take a while")
-    configure_headers()
+    configure_headers(headers_to_read, config_file_path)
     os.system('clear')
+    with open(config_file_path, "r") as file:
+        configuration = json.load(file)
     print("Finished configuring headers using OpenAI API")
 else:
     # Get the modification time of the configuration file
@@ -275,7 +282,7 @@ else:
     if time_diff.days >= 30:
         # Call the configure_headers() function to update the configuration
         print("Loading headers from OpenAI, this will take a while")
-        configure_headers()
+        configure_headers(headers_to_read, config_file_path)
     else:
         # Load the configuration from the file
         with open(config_file_path, "r") as file:
