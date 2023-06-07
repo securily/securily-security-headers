@@ -18,12 +18,16 @@ parser.add_argument("-u", "--url-to-scan", type=str, required=True, help="URL to
 parser.add_argument("-o", "--openai-api-key", type=str, required=True, help="OpenAI API Key")
 parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
 parser.add_argument("-f", "--force-reload", action="store_true", help="Force reload the configuration")
+parser.add_argument("-a", "--authorization-for-api", type=str, help="Authorization Token For APIs")
 args = parser.parse_args()
 
 # The OpenAI API Key
 OPENAI_API_KEY = args.openai_api_key
 # The URL to Scan
 URL = args.url_to_scan
+# The Authorization Token for an API Scan
+authorization = args.authorization_for_api
+
 # List of HTTP headers
 headers_to_read = []
 # Array to store configuration
@@ -49,21 +53,15 @@ web_application_security_headers = [
 ]
 
 api_security_headers = [
-    "Content-Encoding",
-    "Content-Length",
-    "Content-Type",
-    "ETag",
-    "Last-Modified",
-    "Server",
-    "Vary",
-    "WWW-Authenticate",
-    "Public-Key-Pins",
-    "Expect-CT",
-    "Feature-Policy",
-    "Cross-Origin-Resource-Policy",
-    "Cross-Origin-Embedder-Policy",
-    "Cross-Origin-Opener-Policy"
+    "Content-Security-Policy",
+    "X-Content-Type-Options",
+    "Strict-Transport-Security",
+    "X-Frame-Options",
+    "Access-Control-Allow-Origin",
+    "Access-Control-Allow-Methods",
+    "Access-Control-Allow-Headers"
 ]
+
 
 def normalizeUrl(url):
     if not re.match('^https?://', url):
@@ -95,10 +93,19 @@ def fix_bad_json(json_string):
     return None
 
 
-def read_headers_from_url(url):
+def read_headers_from_url(url, test_type='web', authorization=None, payload={}):
     try:
         url = normalizeUrl(url)
-        response = requests.head(url, allow_redirects=True)
+        if test_type == 'web' or test_type == 'app':
+            response = requests.head(url, allow_redirects=True)
+        elif test_type == 'api':
+            request_headers = {
+                'Authorization': 'Bearer ' + authorization
+            }
+            response = requests.request("GET", url, headers=request_headers, data=payload)
+        else:
+            response = requests.head(url, allow_redirects=True)
+
         response_headers = response.headers
 
         headers = {}
@@ -140,7 +147,7 @@ def compare_headers_configuration(headers_found, source_configuration):
         if header_config:
             if header.lower() == header_config.get('name').lower() and (header_config.get('values') and any(keyword.lower() in header_value.lower() for keyword in header_config['values'].split(', '))):
                 results.append({"name": header_config.get('name'), "value": (header_value or "n/a"), "severity": header_config.get('severity'), "reason": header_config.get('reason'), "remediation": header_config.get('remediation'), "values": header_config.get('values'), "status": "PASS"})
-            elif header.lower() == header_config.get('name').lower() and (header_config.get('values')):
+            elif header.lower() == header_config.get('name').lower() and (header_value != 'Not Found'):
                 results.append({"name": header_config.get('name'), "value": (header_value or "n/a"), "severity": header_config.get('severity'), "reason": header_config.get('reason'), "remediation": header_config.get('remediation'), "values": header_config.get('values'), "status": "PASS", "type": "EXCELLENT"})
             else:
                 results.append({"name": header_config.get('name'), "value": (header_value or "n/a"), "severity": header_config.get('severity'), "reason": header_config.get('reason'), "remediation": header_config.get('remediation'), "values": header_config.get('values'), "directives": header_config.get('directives'), "status": "FAIL"})
@@ -245,18 +252,22 @@ def configure_headers(headers_to_configure, path_to_configure):
 
 # Determine the type of headers based on the URL
 URL=normalizeUrl(URL)
+testType = ''
 if "app" in URL:
     headers_to_read = website_security_headers + web_application_security_headers
     config_file_path = webapp_config_file_path
+    testType = 'app'
 elif "api" in URL:
     headers_to_read = api_security_headers
     config_file_path = api_config_file_path
+    testType = 'api'
 else:
     headers_to_read = website_security_headers
     config_file_path = website_config_file_path
+    testType = 'web'
 
 # Example usage of read_headers_from_url()
-headers = read_headers_from_url(URL)
+headers = read_headers_from_url(URL, testType, authorization)
 if headers:
     print("Finished reading headers from URL: {}".format(URL))
     if args.verbose:
