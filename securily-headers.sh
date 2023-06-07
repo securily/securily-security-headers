@@ -8,8 +8,8 @@ import os
 import argparse
 
 # Path to the configuration file
-website_config_file_path = "website_configuration.json"
-webapp_config_file_path = "webapp_configuration.json"
+web_config_file_path = "web_configuration.json"
+app_config_file_path = "app_configuration.json"
 api_config_file_path = "api_configuration.json"
 
 # Configure argparse for command-line arguments
@@ -33,7 +33,7 @@ headers_to_read = []
 # Array to store configuration
 configuration = []
 
-website_security_headers = [
+web_security_headers = [
     "Strict-Transport-Security",
     "Content-Security-Policy",
     "X-Content-Type-Options",
@@ -43,13 +43,10 @@ website_security_headers = [
     "Permissions-Policy"
 ]
 
-web_application_security_headers = [
-    "Access-Control-Allow-Origin",
-    "Access-Control-Allow-Methods",
-    "Access-Control-Allow-Headers",
-    "Access-Control-Allow-Credentials",
-    "Access-Control-Expose-Headers",
-    "Access-Control-Max-Age"
+app_security_headers = [
+    "Content-Type",
+    "Content-Length",
+    "Cache-Control"
 ]
 
 api_security_headers = [
@@ -97,18 +94,22 @@ def read_headers_from_url(url, test_type='web', authorization=None, payload={}):
     try:
         url = normalizeUrl(url)
         if test_type == 'web' or test_type == 'app':
-            response = requests.head(url, allow_redirects=True)
+            payload = {}
+            request_headers = {}
+
+            response = requests.request("GET", url, headers=request_headers, data=payload, allow_redirects=True)
         elif test_type == 'api':
             request_headers = {
                 'Authorization': 'Bearer ' + authorization
             }
-            response = requests.request("GET", url, headers=request_headers, data=payload)
+            response = requests.request("GET", url, headers=request_headers, data=payload, allow_redirects=True)
         else:
             response = requests.head(url, allow_redirects=True)
 
         response_headers = response.headers
 
         headers = {}
+        status_code = response.status_code
 
         for header in headers_to_read:
             header_value = response_headers.get(header)
@@ -128,7 +129,7 @@ def read_headers_from_url(url, test_type='web', authorization=None, payload={}):
             else:
                 headers[header] = "Not Found"
 
-        return headers
+        return headers, status_code
 
     except requests.RequestException as e:
         if args.verbose:
@@ -136,7 +137,7 @@ def read_headers_from_url(url, test_type='web', authorization=None, payload={}):
         return None
 
 
-def compare_headers_configuration(headers_found, source_configuration):
+def compare_headers_configuration(headers_found, source_configuration, status_code):
     results = []
 
     for header in headers_to_read:
@@ -146,13 +147,13 @@ def compare_headers_configuration(headers_found, source_configuration):
 
         if header_config:
             if header.lower() == header_config.get('name').lower() and (header_config.get('values') and any(keyword.lower() in header_value.lower() for keyword in header_config['values'].split(', '))):
-                results.append({"name": header_config.get('name'), "value": (header_value or "n/a"), "severity": header_config.get('severity'), "reason": header_config.get('reason'), "remediation": header_config.get('remediation'), "values": header_config.get('values'), "status": "PASS"})
+                results.append({"name": header_config.get('name'), "value": (header_value or "n/a"), "severity": header_config.get('severity'), "reason": header_config.get('reason'), "remediation": header_config.get('remediation'), "values": header_config.get('values'), "status": "PASS", "status_code": status_code})
             elif header.lower() == header_config.get('name').lower() and (header_value != 'Not Found'):
-                results.append({"name": header_config.get('name'), "value": (header_value or "n/a"), "severity": header_config.get('severity'), "reason": header_config.get('reason'), "remediation": header_config.get('remediation'), "values": header_config.get('values'), "status": "PASS", "type": "EXCELLENT"})
+                results.append({"name": header_config.get('name'), "value": (header_value or "n/a"), "severity": header_config.get('severity'), "reason": header_config.get('reason'), "remediation": header_config.get('remediation'), "values": header_config.get('values'), "status": "PASS", "type": "EXCELLENT", "status_code": status_code})
             else:
-                results.append({"name": header_config.get('name'), "value": (header_value or "n/a"), "severity": header_config.get('severity'), "reason": header_config.get('reason'), "remediation": header_config.get('remediation'), "values": header_config.get('values'), "directives": header_config.get('directives'), "status": "FAIL"})
+                results.append({"name": header_config.get('name'), "value": (header_value or "n/a"), "severity": header_config.get('severity'), "reason": header_config.get('reason'), "remediation": header_config.get('remediation'), "values": header_config.get('values'), "directives": header_config.get('directives'), "status": "FAIL", "status_code": status_code})
         else:
-            results.append({"name": header, "value": (header_value or "n/a"), "severity": "", "reason": "", "remediation": "", "values": "", "directives": "", "status": "FAIL"})
+            results.append({"name": header, "value": (header_value or "n/a"), "severity": "", "reason": "", "remediation": "", "values": "", "directives": "", "status": "FAIL", "status_code": status_code})
 
     return results
 
@@ -254,20 +255,21 @@ def configure_headers(headers_to_configure, path_to_configure):
 URL=normalizeUrl(URL)
 testType = ''
 if "app" in URL:
-    headers_to_read = website_security_headers + web_application_security_headers
-    config_file_path = webapp_config_file_path
+    headers_to_read = web_security_headers + app_security_headers
+    config_file_path = app_config_file_path
     testType = 'app'
 elif "api" in URL:
     headers_to_read = api_security_headers
     config_file_path = api_config_file_path
     testType = 'api'
 else:
-    headers_to_read = website_security_headers
-    config_file_path = website_config_file_path
+    headers_to_read = web_security_headers
+    config_file_path = web_config_file_path
     testType = 'web'
 
 # Example usage of read_headers_from_url()
-headers = read_headers_from_url(URL, testType, authorization)
+status_code = 0
+headers, status_code = read_headers_from_url(URL, testType, authorization)
 if headers:
     print("Finished reading headers from URL: {}".format(URL))
     if args.verbose:
@@ -304,7 +306,7 @@ else:
         print("Finished loading existing configuration from file")
 
 # Compare headers and configuration
-results = compare_headers_configuration(headers, configuration)
+results = compare_headers_configuration(headers, configuration, status_code)
 os.system('clear')
 print("Finished comparing headers and configuration")
 
