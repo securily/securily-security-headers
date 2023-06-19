@@ -147,13 +147,13 @@ def compare_headers_configuration(headers_found, source_configuration, status_co
 
         if header_config:
             if header.lower() == header_config.get('name').lower() and (header_config.get('values') and any(keyword.lower() in header_value.lower() for keyword in header_config['values'].split(', '))):
-                results.append({"name": header_config.get('name'), "value": (header_value or "n/a"), "severity": header_config.get('severity'), "reason": header_config.get('reason'), "remediation": header_config.get('remediation'), "values": header_config.get('values'), "status": "PASS", "status_code": status_code})
+                results.append({"url": url, "name": header_config.get('name'), "value": (header_value or "n/a"), "severity": header_config.get('severity'), "reason": header_config.get('reason'), "remediation": header_config.get('remediation'), "values": header_config.get('values'), "status": "PASS", "status_code": status_code})
             elif header.lower() == header_config.get('name').lower() and (header_value != 'Not Found'):
-                results.append({"name": header_config.get('name'), "value": (header_value or "n/a"), "severity": header_config.get('severity'), "reason": header_config.get('reason'), "remediation": header_config.get('remediation'), "values": header_config.get('values'), "status": "PASS", "type": "EXCELLENT", "status_code": status_code})
+                results.append({"url": url, "name": header_config.get('name'), "value": (header_value or "n/a"), "severity": header_config.get('severity'), "reason": header_config.get('reason'), "remediation": header_config.get('remediation'), "values": header_config.get('values'), "status": "PASS", "type": "EXCELLENT", "status_code": status_code})
             else:
-                results.append({"name": header_config.get('name'), "value": (header_value or "n/a"), "severity": header_config.get('severity'), "reason": header_config.get('reason'), "remediation": header_config.get('remediation'), "values": header_config.get('values'), "directives": header_config.get('directives'), "status": "FAIL", "status_code": status_code})
+                results.append({"url": url, "name": header_config.get('name'), "value": (header_value or "n/a"), "severity": header_config.get('severity'), "reason": header_config.get('reason'), "remediation": header_config.get('remediation'), "values": header_config.get('values'), "directives": header_config.get('directives'), "status": "FAIL", "status_code": status_code})
         else:
-            results.append({"name": header, "value": (header_value or "n/a"), "severity": "", "reason": "", "remediation": "", "values": "", "directives": "", "status": "FAIL", "status_code": status_code})
+            results.append({"url": url, "name": header, "value": (header_value or "n/a"), "severity": "", "reason": "", "remediation": "", "values": "", "directives": "", "status": "FAIL", "status_code": status_code})
 
     return results
 
