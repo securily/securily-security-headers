@@ -193,7 +193,7 @@ def configure_headers(headers_to_configure, path_to_configure):
             )
 
             try:
-                os.system('clear')
+                
                 print("Working on header {}".format(header))
                 # Remove invalid control characters from response
                 response_text = response.text
@@ -282,7 +282,7 @@ if args.force_reload or not os.path.exists(config_file_path):
     # Call the configure_headers() function to create or reload the configuration file
     print("Loading headers from OpenAI, this will take a while")
     configure_headers(headers_to_read, config_file_path)
-    os.system('clear')
+    
     with open(config_file_path, "r") as file:
         configuration = json.load(file)
     print("Finished configuring headers using OpenAI API")
@@ -302,12 +302,12 @@ else:
         # Load the configuration from the file
         with open(config_file_path, "r") as file:
             configuration = json.load(file)
-        os.system('clear')
+        
         print("Finished loading existing configuration from file")
 
 # Compare headers and configuration
 results = compare_headers_configuration(headers, configuration, status_code)
-os.system('clear')
+
 print("Finished comparing headers and configuration")
 
 # Store the results in a list
@@ -322,5 +322,5 @@ print(results_json)
 # Write the results to a file
 with open("results.json", "w") as file:
     file.write(results_json)
-os.system('clear')
+
 print("Results have been saved to results.json")
