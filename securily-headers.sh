@@ -137,7 +137,7 @@ def read_headers_from_url(url, test_type='web', authorization=None, payload={}):
         return None
 
 
-def compare_headers_configuration(headers_found, source_configuration, status_code):
+def compare_headers_configuration(headers_found, source_configuration, status_code, url):
     results = []
 
     for header in headers_to_read:
@@ -306,7 +306,7 @@ else:
         print("Finished loading existing configuration from file")
 
 # Compare headers and configuration
-results = compare_headers_configuration(headers, configuration, status_code)
+results = compare_headers_configuration(headers, configuration, status_code, URL)
 
 print("Finished comparing headers and configuration")
 
