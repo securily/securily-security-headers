@@ -252,16 +252,23 @@ def configure_headers(headers_to_configure, path_to_configure):
         json.dump(configuration, file)
 
 # Determine the type of headers based on the URL
-URL=normalizeUrl(URL)
+URL = normalizeUrl(URL)
 testType = ''
 if "app" in URL:
     headers_to_read = web_security_headers + app_security_headers
     config_file_path = app_config_file_path
     testType = 'app'
 elif "api" in URL:
-    headers_to_read = api_security_headers
-    config_file_path = api_config_file_path
-    testType = 'api'
+    # Check if 'authorization' exists and is not None and not empty
+    if 'authorization' in locals() and authorization is not None and authorization.strip() != "":
+        headers_to_read = api_security_headers
+        config_file_path = api_config_file_path
+        testType = 'api'
+    else:
+        # Handle the case where 'authorization' is missing or empty
+        headers_to_read = web_security_headers
+        config_file_path = web_config_file_path
+        testType = 'web'
 else:
     headers_to_read = web_security_headers
     config_file_path = web_config_file_path
