@@ -173,7 +173,11 @@ def configure_headers(headers_to_configure, path_to_configure):
 
             # Create the JSON data for the request
             json_data = {
-                "prompt": prompt,
+                "model": "gpt-3.5-turbo",
+                "messages": [{
+                  "role": "system",
+                  "content": prompt
+                }],
                 "max_tokens": 2000,
                 "temperature": 0.7,
                 "top_p": 1,
@@ -184,7 +188,7 @@ def configure_headers(headers_to_configure, path_to_configure):
 
             # Send the request to OpenAI API
             response = requests.post(
-                "https://api.openai.com/v1/engines/text-davinci-003/completions",
+                "https://api.openai.com/v1/chat/completions",
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": "Bearer {}".format(OPENAI_API_KEY)
@@ -200,7 +204,7 @@ def configure_headers(headers_to_configure, path_to_configure):
                 cleaned_response = re.sub(r'[\x00-\x1F\x7F-\x9F]', '', response_text)
 
                 # Extract JSON object from cleaned response
-                extracted_json = json.loads(cleaned_response)["choices"][0]["text"]
+                extracted_json = json.loads(cleaned_response)["choices"][0]['message']['content']
 
                 if extracted_json is not None:
                     try:
