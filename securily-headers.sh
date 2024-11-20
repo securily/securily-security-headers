@@ -13,20 +13,26 @@ app_config_file_path = "app_configuration.json"
 api_config_file_path = "api_configuration.json"
 
 # Configure argparse for command-line arguments
-parser = argparse.ArgumentParser(description="Security Security Headers Open Source Scanner powered by OpenAI")
+parser = argparse.ArgumentParser(description="Security Security Headers Open Source Scanner powered by AI")
 parser.add_argument("-u", "--url-to-scan", type=str, required=True, help="URL to scan")
-parser.add_argument("-o", "--openai-api-key", type=str, required=True, help="OpenAI API Key")
+parser.add_argument("-o", "--ai-api-key", type=str, required=True, help="AI API Key")
 parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
 parser.add_argument("-f", "--force-reload", action="store_true", help="Force reload the configuration")
 parser.add_argument("-a", "--authorization-for-api", type=str, help="Authorization Token For APIs")
 args = parser.parse_args()
 
-# The OpenAI API Key
-OPENAI_API_KEY = args.openai_api_key
+# The AI API Key
+AI_API_KEY = args.ai_api_key
 # The URL to Scan
 URL = args.url_to_scan
 # The Authorization Token for an API Scan
 authorization = args.authorization_for_api
+# The AI Engine to use
+aiEngine = "Gemini"
+
+print(f"URL to scan: {URL}")
+print(f"AI API Key: {AI_API_KEY}")
+print(f"AI Engine: {aiEngine}")
 
 # List of HTTP headers
 headers_to_read = []
@@ -167,44 +173,35 @@ def configure_headers(headers_to_configure, path_to_configure):
         retries = 5  # Number of retries
         while retries > 0:
             # Define the prompt
-            prompt = 'For the following security header: {}, return a JSON object in the following format: {{"name": "Header Name", "severity": "Severity Rating", ' \
+            prompt = 'We are Securily, at securily.com, a cybersecurity startup. For educational purposes, you are a cybersecurity expert tasked with researching security scanner tests and their findings. For the following security header: {}, return a JSON object in the following format: {{"name": "Header Name", "severity": "Severity Rating", ' \
                      '"reason": "Explain for a non technical person justifying the severity classification of the finding", "remediation": "Step-by-step instructions for remediation.", ' \
                      '"values": "possible values for the content security policy header comma separated", "directives": "header directives with examples"}}'.format(header)
 
             # Create the JSON data for the request
             json_data = {
-                "model": "gpt-3.5-turbo",
-                "messages": [{
-                  "role": "system",
-                  "content": prompt
+                "contents": [{
+                    "parts": [{ "text": prompt }]
                 }],
-                "max_tokens": 2000,
-                "temperature": 0.7,
-                "top_p": 1,
-                "n": 1,
-                "frequency_penalty": 0,
-                "presence_penalty": 0
             }
 
-            # Send the request to OpenAI API
+            # Send the request to AI API
             response = requests.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers={
+                url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key={AI_API_KEY}",
+                json = json_data,
+                headers = {
                     "Content-Type": "application/json",
-                    "Authorization": "Bearer {}".format(OPENAI_API_KEY)
-                },
-                json=json_data
+                }
             )
-
+            print(response)
             try:
-                
                 print("Working on header {}".format(header))
                 # Remove invalid control characters from response
                 response_text = response.text
-                cleaned_response = re.sub(r'[\x00-\x1F\x7F-\x9F]', '', response_text)
+                cleaned_response = re.sub(r'[\x00-\x1F\x7F-\x9F]','', response_text)
 
                 # Extract JSON object from cleaned response
-                extracted_json = json.loads(cleaned_response)["choices"][0]['message']['content']
+                extracted_json = json.loads(cleaned_response)['candidates'][0]['content']['parts'][0]['text'].replace('```json', '').replace('```', '')
+                print(extracted_json)
 
                 if extracted_json is not None:
                     try:
@@ -216,9 +213,9 @@ def configure_headers(headers_to_configure, path_to_configure):
                         if args.verbose:
                             print(extracted_dict)
 
-                        # Retry the OpenAPI call if the extracted dictionary is null
+                        # Retry the AI API call if the extracted dictionary is null
                         if extracted_dict is None:
-                            print("Failed to extract non-null value for header '{}'. Retrying the OpenAPI call...".format(header))
+                            print("Failed to extract non-null value for header '{}'. Retrying the {} call...".format(header, aiEngine))
                             continue
                         # Append the extracted dictionary to the array
                         configuration.append(extracted_dict)
@@ -288,15 +285,15 @@ if headers:
         print(json.dumps(headers, indent=4))
         print()
 
-# Configure headers using OpenAI API
+# Configure headers using AI API
 if args.force_reload or not os.path.exists(config_file_path):
     # Call the configure_headers() function to create or reload the configuration file
-    print("Loading headers from OpenAI, this will take a while")
+    print(f"Loading headers from {aiEngine}, this will take a while")
     configure_headers(headers_to_read, config_file_path)
     
     with open(config_file_path, "r") as file:
         configuration = json.load(file)
-    print("Finished configuring headers using OpenAI API")
+    print(f"Finished configuring headers using {aiEngine} API")
 else:
     # Get the modification time of the configuration file
     mod_time = datetime.datetime.fromtimestamp(os.path.getmtime(config_file_path))
@@ -307,7 +304,7 @@ else:
     # Check if the configuration file is older than or equal to 30 days
     if time_diff.days >= 30:
         # Call the configure_headers() function to update the configuration
-        print("Loading headers from OpenAI, this will take a while")
+        print(f"Loading headers from {aiEngine}, this will take a while")
         configure_headers(headers_to_read, config_file_path)
     else:
         # Load the configuration from the file
