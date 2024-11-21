@@ -8,12 +8,12 @@ import os
 import argparse
 
 # Path to the configuration file
-web_config_file_path = "web_configuration.json"
-app_config_file_path = "app_configuration.json"
-api_config_file_path = "api_configuration.json"
+web_config_file_path="web_configuration.json"
+app_config_file_path="app_configuration.json"
+api_config_file_path="api_configuration.json"
 
 # Configure argparse for command-line arguments
-parser = argparse.ArgumentParser(description="Security Security Headers Open Source Scanner powered by AI")
+parser= argparse.ArgumentParser(description="Security Security Headers Open Source Scanner powered by AI")
 parser.add_argument("-u", "--url-to-scan", type=str, required=True, help="URL to scan")
 parser.add_argument("-o", "--ai-api-key", type=str, required=True, help="AI API Key")
 parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
@@ -22,17 +22,20 @@ parser.add_argument("-a", "--authorization-for-api", type=str, help="Authorizati
 args = parser.parse_args()
 
 # The AI API Key
+AI_API_ENGINE = "Gemini"
 AI_API_KEY = args.ai_api_key
+AI_API_MODEL = "gemini-1.5-pro"
+
 # The URL to Scan
 URL = args.url_to_scan
 # The Authorization Token for an API Scan
 authorization = args.authorization_for_api
 # The AI Engine to use
-aiEngine = "Gemini"
 
 print(f"URL to scan: {URL}")
-print(f"AI API Key: {AI_API_KEY}")
-print(f"AI Engine: {aiEngine}")
+print(f"AI API Engine: {AI_API_ENGINE}")
+print(f"AI API Key: [REDACTED]")
+print(f"AI API Model: {AI_API_MODEL}")
 
 # List of HTTP headers
 headers_to_read = []
@@ -186,7 +189,7 @@ def configure_headers(headers_to_configure, path_to_configure):
 
             # Send the request to AI API
             response = requests.post(
-                url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key={AI_API_KEY}",
+                url = f"https://generativelanguage.googleapis.com/v1/models/{AI_API_MODEL}:generateContent?key={AI_API_KEY}",
                 json = json_data,
                 headers = {
                     "Content-Type": "application/json",
@@ -215,7 +218,7 @@ def configure_headers(headers_to_configure, path_to_configure):
 
                         # Retry the AI API call if the extracted dictionary is null
                         if extracted_dict is None:
-                            print("Failed to extract non-null value for header '{}'. Retrying the {} call...".format(header, aiEngine))
+                            print("Failed to extract non-null value for header '{}'. Retrying the {} call...".format(header, AI_API_ENGINE))
                             continue
                         # Append the extracted dictionary to the array
                         configuration.append(extracted_dict)
@@ -288,12 +291,12 @@ if headers:
 # Configure headers using AI API
 if args.force_reload or not os.path.exists(config_file_path):
     # Call the configure_headers() function to create or reload the configuration file
-    print(f"Loading headers from {aiEngine}, this will take a while")
+    print(f"Loading headers from {AI_API_ENGINE}, this will take a while")
     configure_headers(headers_to_read, config_file_path)
     
     with open(config_file_path, "r") as file:
         configuration = json.load(file)
-    print(f"Finished configuring headers using {aiEngine} API")
+    print(f"Finished configuring headers using {AI_API_ENGINE} API")
 else:
     # Get the modification time of the configuration file
     mod_time = datetime.datetime.fromtimestamp(os.path.getmtime(config_file_path))
@@ -304,7 +307,7 @@ else:
     # Check if the configuration file is older than or equal to 30 days
     if time_diff.days >= 30:
         # Call the configure_headers() function to update the configuration
-        print(f"Loading headers from {aiEngine}, this will take a while")
+        print(f"Loading headers from {AI_API_ENGINE}, this will take a while")
         configure_headers(headers_to_read, config_file_path)
     else:
         # Load the configuration from the file
