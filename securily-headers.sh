@@ -28,11 +28,11 @@ URL = args.url_to_scan
 # The Authorization Token for an API Scan
 authorization = args.authorization_for_api
 # The AI Engine to use
-aiEngine = "Gemini"
+apiModel = "gemini-1.5-pro"
 
 print(f"URL to scan: {URL}")
 print(f"AI API Key: {AI_API_KEY}")
-print(f"AI Engine: {aiEngine}")
+print(f"AI Engine: {apiModel}")
 
 # List of HTTP headers
 headers_to_read = []
@@ -186,7 +186,7 @@ def configure_headers(headers_to_configure, path_to_configure):
 
             # Send the request to AI API
             response = requests.post(
-                url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key={AI_API_KEY}",
+                url = f"https://generativelanguage.googleapis.com/v1/models/{apiModel}:generateContent?key={AI_API_KEY}",
                 json = json_data,
                 headers = {
                     "Content-Type": "application/json",
@@ -215,7 +215,7 @@ def configure_headers(headers_to_configure, path_to_configure):
 
                         # Retry the AI API call if the extracted dictionary is null
                         if extracted_dict is None:
-                            print("Failed to extract non-null value for header '{}'. Retrying the {} call...".format(header, aiEngine))
+                            print("Failed to extract non-null value for header '{}'. Retrying the {} call...".format(header, apiModel))
                             continue
                         # Append the extracted dictionary to the array
                         configuration.append(extracted_dict)
@@ -288,12 +288,12 @@ if headers:
 # Configure headers using AI API
 if args.force_reload or not os.path.exists(config_file_path):
     # Call the configure_headers() function to create or reload the configuration file
-    print(f"Loading headers from {aiEngine}, this will take a while")
+    print(f"Loading headers from {apiModel}, this will take a while")
     configure_headers(headers_to_read, config_file_path)
     
     with open(config_file_path, "r") as file:
         configuration = json.load(file)
-    print(f"Finished configuring headers using {aiEngine} API")
+    print(f"Finished configuring headers using {apiModel} API")
 else:
     # Get the modification time of the configuration file
     mod_time = datetime.datetime.fromtimestamp(os.path.getmtime(config_file_path))
@@ -304,7 +304,7 @@ else:
     # Check if the configuration file is older than or equal to 30 days
     if time_diff.days >= 30:
         # Call the configure_headers() function to update the configuration
-        print(f"Loading headers from {aiEngine}, this will take a while")
+        print(f"Loading headers from {apiModel}, this will take a while")
         configure_headers(headers_to_read, config_file_path)
     else:
         # Load the configuration from the file
