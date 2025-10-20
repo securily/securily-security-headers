@@ -1,3 +1,18 @@
+# Securily Security Headers Scanner - Generated Files
+# Configuration files (auto-generated from AI)
+web_configuration.json
+app_configuration.json
+api_configuration.json
+
+# Scan results
+results.json
+
+# API Keys and secrets (NEVER commit these!)
+*.key
+*.secret
+.env
+.env.local
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

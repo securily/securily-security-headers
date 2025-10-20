@@ -1,0 +1,7 @@
+feat: Add optional AI insights with Gemini integration
+
+- Add -ai flag for optional AI-powered security analysis
+- Provide security grades, priority actions, and risk assessments
+- Keep scanner fully functional offline without AI
+- Remove complex configuration generation system
+- Update documentation and examples for v2.1

@@ -1,0 +1,14 @@
+# Securily Security Headers Scanner
+# Python Dependencies
+
+# HTTP requests library for fetching headers
+requests>=2.31.0
+
+# Standard library modules (included with Python, listed for reference)
+# - json (JSON parsing)
+# - re (regular expressions)
+# - datetime (date/time handling)
+# - os (file system operations)
+# - argparse (command-line argument parsing)
+# - time (timing and delays)
+

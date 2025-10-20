@@ -33,11 +33,11 @@
   },
   {
     "name": "X-XSS-Protection",
-    "severity": "Medium",
-    "reason": "X-XSS-Protection is a header that can help protect against cross-site scripting (XSS) attacks by setting certain parameters for the browser to follow. XSS attacks are a common type of attack used to inject malicious scripts into web pages and applications, which can be used to steal sensitive information or disrupt website functionality. Without this header, an attacker could potentially inject malicious scripts into a website, which would then be executed in visitors' browsers.",
-    "remediation": "To ensure X-XSS-Protection is set properly, add the following line to the HTTP response header of the web application: X-XSS-Protection: 1; mode=block. This will enable the browser's XSS filter and block any malicious scripts from being executed.",
-    "values": "0, 1, mode=block, report=",
-    "directives": "X-XSS-Protection: 1; mode=block"
+    "severity": "Low",
+    "reason": "X-XSS-Protection is a LEGACY header that was used to enable the XSS Auditor in older browsers. This header is now DEPRECATED and no longer recommended. Modern browsers have removed support for this header in favor of Content-Security-Policy. The XSS Auditor had known bypasses and could sometimes cause security issues. This header is included only for legacy browser support.",
+    "remediation": "DEPRECATED: Do not rely on this header for security. Instead, implement a strong Content-Security-Policy. If you must support very old browsers, you can set X-XSS-Protection: 1; mode=block, but prioritize CSP implementation. For modern applications, this header can be omitted entirely.",
+    "values": "0, 1, mode=block (DEPRECATED - use Content-Security-Policy instead)",
+    "directives": "X-XSS-Protection: 1; mode=block (DEPRECATED - Not recommended for modern applications)"
   },
   {
     "name": "Referrer-Policy",
@@ -161,19 +161,19 @@
   },
   {
     "name": "Public-Key-Pins",
-    "severity": "High",
-    "reason": "Public-Key-Pins (HPKP) is an HTTP response header used to specify to a user agent the hashes of public keys associated with the domain of the website. This header is used to detect if a man-in-the-middle attack is taking place, as the attacker would not have the correct public key to the website. Without this header, an attacker could redirect requests to a malicious website, or inject malicious content into the website.",
-    "remediation": "1. Generate a public/private key pair. 2. Generate a sha-256 hash of the public key and store in the Public-Key-Pins header.3. Include a max-age to set an expiry date for the Pin.4. Add a backup Pin to the header in case the primary Pin is compromised.5. Include the includeSubDomains directive to enforce the HPKP policy on all subdomains.6. Monitor the HPKP logs for any issues.",
-    "values": "pin-sha256, max-age, includeSubDomains",
-    "directives": "pin-sha256=\"d6qzRu9zOECb90Uez27xWltNsj0e1Md7GkYYkVoZWmM=\"; max-age=2592000; includeSubDomains"
+    "severity": "Critical",
+    "reason": "DEPRECATED AND DANGEROUS: Public-Key-Pins (HPKP) has been DEPRECATED by all major browsers as of 2018 and removed from Chrome, Firefox, and Edge. This header was found to be too dangerous to use - misconfiguration could permanently lock users out of your website. HPKP has been replaced by Certificate Transparency (CT) which is now mandatory. DO NOT USE THIS HEADER.",
+    "remediation": "DO NOT IMPLEMENT THIS HEADER. It is deprecated and can cause serious issues. Instead, ensure your certificates are logged in Certificate Transparency logs (automatic with most CAs). If you currently have HPKP deployed, remove it immediately and monitor for any issues during the removal process.",
+    "values": "DEPRECATED - Do not use",
+    "directives": "DEPRECATED - Remove if present. Replaced by Certificate Transparency."
   },
   {
     "name": "Expect-CT",
-    "severity": "High",
-    "reason": "Expect-CT is an HTTP header that allows sites to opt in to reporting and/or enforcement of Certified Transparency, a mechanism for monitoring certificate transparency compliance of Certificate Authorities (CAs). It also allows sites to specify whether they want the browser to enforce Certificate Transparency policy for connections to the site. If this header is not present, the browser will not enforce any Certificate Transparency policy.",
-    "remediation": "Set the Expect-CT header to 'enforce', and specify a 'max-age' directive to set the caching duration of the header. For example: Expect-CT: max-age=86400, enforce",
-    "values": "max-age, enforce",
-    "directives": "max-age: Specifies the maximum amount of time, in seconds, that the header should be cached. enforce: Specifies that the browser should enforce Certificate Transparency policy for connections to the site."
+    "severity": "Low",
+    "reason": "DEPRECATED: Expect-CT is now OBSOLETE as of 2021. Certificate Transparency (CT) is now mandatory for all publicly trusted certificates issued after April 2018. All major browsers now require CT by default, making this header unnecessary. Chrome deprecated this header in Chrome 107 (October 2022), and other browsers have followed suit.",
+    "remediation": "This header is no longer needed. Certificate Transparency is now enforced automatically by browsers for all publicly trusted certificates. You can safely remove this header. Focus instead on ensuring your certificates are issued by CAs that properly log to CT logs (which is now standard practice).",
+    "values": "max-age, enforce (DEPRECATED - no longer needed)",
+    "directives": "DEPRECATED - Certificate Transparency is now mandatory by default. This header can be removed."
   },
   {
     "name": "Feature-Policy",
@@ -206,5 +206,21 @@
     "remediation": "To enable Cross-Origin-Opener-Policy, specify the header in the response header with the value of 'same-origin'. This will ensure that any cross-origin requests will be blocked, and the website will only be opened in a browser tab from its own origin.",
     "values": "same-origin",
     "directives": "Cross-Origin-Opener-Policy: same-origin"
+  },
+  {
+    "name": "Permissions-Policy",
+    "severity": "High",
+    "reason": "Permissions Policy (formerly Feature Policy) allows a site to control which browser features and APIs can be used in the browser. This helps prevent unauthorized access to sensitive features like camera, microphone, geolocation, and payment APIs. Without proper configuration, malicious scripts or third-party content could abuse these powerful browser features.",
+    "remediation": "Configure the Permissions-Policy header to specify which features should be allowed and for which origins. Use a deny-by-default approach and only enable features that are actually needed. For example: Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=(self)",
+    "values": "geolocation, camera, microphone, payment, usb, magnetometer, gyroscope, accelerometer, ambient-light-sensor, autoplay, encrypted-media, fullscreen, midi, picture-in-picture, display-capture, clipboard-read, clipboard-write, sync-xhr, self, none, *",
+    "directives": "Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=(self), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
+  },
+  {
+    "name": "Cache-Control",
+    "severity": "Medium",
+    "reason": "Cache-Control header defines caching policies for resources. Improper caching can lead to sensitive data being stored in browser or proxy caches, potentially exposing confidential information. For sensitive resources, it's critical to prevent caching entirely.",
+    "remediation": "For sensitive content, set Cache-Control to 'no-store, no-cache, must-revalidate, private'. For public static resources, you can use 'public, max-age=<seconds>' to improve performance. Always consider the sensitivity of the content when setting cache directives.",
+    "values": "public, private, no-cache, no-store, must-revalidate, max-age, s-maxage, immutable",
+    "directives": "Cache-Control: no-store, no-cache, must-revalidate, private (for sensitive content); Cache-Control: public, max-age=31536000, immutable (for static assets)"
   }
 ]
